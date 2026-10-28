@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwendantu Farm Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a5f2a;
+            --secondary: #2d8a3e;
+            --accent: #f4a261;
+            --dark: #1b4332;
+        }
+        body { background: #f0f7f2; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar {
+            background: linear-gradient(180deg, var(--dark), var(--primary));
+            min-height: 100vh;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.85);
+            border-radius: 8px;
+            margin: 4px 0;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .stat-card {
+            background: white;
+            border-left: 5px solid var(--secondary);
+        }
+        .btn-farm {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        .btn-farm:hover { background: var(--secondary); color: white; }
+        .table thead { background: var(--dark); color: white; }
+        .badge-sick { background: #e76f51; }
+        .badge-healthy { background: #2a9d8f; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; }
+        .form-label { font-weight: 600; color: #333; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar p-3">
+            <div class="logo mb-4 text-center">
+                <i class="fas fa-cow me-2"></i>MWENDANTU FARM
+            </div>
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="#" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+                <a class="nav-link" href="#" onclick="showSection('branches')"><i class="fas fa-map-marker-alt me-2"></i>Branches</a>
+                <a class="nav-link" href="#" onclick="showSection('cows')"><i class="fas fa-cow me-2"></i>Cows</a>
+                <a class="nav-link" href="#" onclick="showSection('feeds')"><i class="fas fa-seedling me-2"></i>Feeds Stock</a>
+                <a class="nav-link" href="#" onclick="showSection('milk')"><i class="fas fa-wine-bottle me-2"></i>Milk Production</a>
+                <a class="nav-link" href="#" onclick="showSection('workers')"><i class="fas fa-users me-2"></i>Workers</a>
+                <a class="nav-link" href="#" onclick="showSection('managers')"><i class="fas fa-user-tie me-2"></i>Managers</a>
+                <a class="nav-link" href="#" onclick="showSection('vehicles')"><i class="fas fa-truck me-2"></i>Vehicles & Machines</a>
+                <a class="nav-link" href="#" onclick="showSection('fuel')"><i class="fas fa-gas-pump me-2"></i>Fuel Consumption</a>
+                <a class="nav-link" href="#" onclick="showSection('electricity')"><i class="fas fa-bolt me-2"></i>Electricity</a>
+                <a class="nav-link" href="#" onclick="showSection('vaccination')"><i class="fas fa-syringe me-2"></i>Vaccination</a>
+            </nav>
+            <div class="mt-5 text-center small opacity-75">
+                P1 • Visual Studio Project<br>Mwendantu Farm © 2025
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="section active">
+                <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard – Mwendantu Farm</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card p-3">
+                            <div class="text-muted small">Total Cows</div>
+                            <h3 id="statCows">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card p-3">
+                            <div class="text-muted small">Branches</div>
+                            <h3 id="statBranches">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card p-3">
+                            <div class="text-muted small">Today's Milk (L)</div>
+                            <h3 id="statMilk">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card p-3">
+                            <div class="text-muted small">Workers</div>
+                            <h3 id="statWorkers">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card p-3">
+                            <h5>Sick Cows Alert</h5>
+                            <div id="sickAlert" class="text-danger">No sick cows currently.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-3">
+                            <h5>Low Feed Stock</h5>
+                            <div id="feedAlert">All good.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BRANCHES -->
+            <div id="branches" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-map-marker-alt me-2"></i>Farm Branches</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#branchModal"><i class="fas fa-plus"></i> Add Branch</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Location</th><th>Cows</th><th>Manager</th><th>Action</th></tr></thead>
+                            <tbody id="branchTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COWS -->
+            <div id="cows" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-cow me-2"></i>Cow Management</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#cowModal"><i class="fas fa-plus"></i> Add Cow</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID / Tag</th><th>Name</th><th>Breed</th><th>Age (yrs)</th>
+                                    <th>Branch</th><th>AI Date</th><th>Status</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cowTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FEEDS -->
+            <div id="feeds" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-seedling me-2"></i>Feeds Stock & Daily Calculation</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#feedModal"><i class="fas fa-plus"></i> Add / Update Stock</button>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h6>Total Feed Stock (kg)</h6>
+                            <h2 id="totalFeed">0</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h6>Daily Consumption (kg)</h6>
+                            <h2 id="dailyFeed">0</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h6>Days Remaining</h6>
+                            <h2 id="daysLeft">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>Feed Type</th><th>Quantity (kg)</th><th>Daily Use (kg)</th><th>Last Updated</th><th>Action</th></tr></thead>
+                            <tbody id="feedTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MILK -->
+            <div id="milk" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-wine-bottle me-2"></i>Milk Production (per cow)</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#milkModal"><i class="fas fa-plus"></i> Record Milk</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Date</th><th>Cow</th><th>Morning (L)</th><th>Evening (L)</th><th>Total (L)</th><th>Action</th></tr></thead>
+                            <tbody id="milkTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKERS -->
+            <div id="workers" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-users me-2"></i>Workers (Regular & Irregular)</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#workerModal"><i class="fas fa-plus"></i> Add Worker</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Branch</th><th>Phone</th><th>Action</th></tr></thead>
+                            <tbody id="workerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MANAGERS -->
+            <div id="managers" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-user-tie me-2"></i>Managers</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#managerModal"><i class="fas fa-plus"></i> Add Manager</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Branch</th><th>Phone</th><th>Email</th><th>Action</th></tr></thead>
+                            <tbody id="managerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VEHICLES -->
+            <div id="vehicles" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-truck me-2"></i>Vehicles & Machines</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#vehicleModal"><i class="fas fa-plus"></i> Add Vehicle/Machine</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Type</th><th>Registration</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="vehicleTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FUEL -->
+            <div id="fuel" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-gas-pump me-2"></i>Fuel Consumption</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#fuelModal"><i class="fas fa-plus"></i> Record Fuel</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Date</th><th>Vehicle/Machine</th><th>Litres</th><th>Cost (KES)</th><th>Notes</th><th>Action</th></tr></thead>
+                            <tbody id="fuelTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ELECTRICITY -->
+            <div id="electricity" class="section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-bolt me-2"></i>Electricity Usage</h2>
+                    <button class="btn btn-farm" data-bs-toggle="modal" data-bs-target="#elecModal"><i class="fas fa-plus"></i> Record Reading</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Date</th><th>Reading (kWh)</th><th>Cost (KES)</th><th>Notes</th><th>Action</th></tr></thead>
+                            <tbody id="elecTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VACCINATION -->
+            <div id="vaccination" class="section">
+                <h2 class="mb-4"><i class="fas fa-syringe me-2"></i>Vaccination & Diseases</h2>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="card p-3 mb-3">
+                            <h5>Common Diseases for Vaccination</h5>
+                            <ul class="list-group list-group-flush" id="diseaseList">
+                                <li class="list-group-item">IBR (Infectious Bovine Rhinotracheitis)</li>
+                                <li class="list-group-item">BVD (Bovine Viral Diarrhea Type 1 & 2)</li>
+                                <li class="list-group-item">PI3 (Parainfluenza-3)</li>
+                                <li class="list-group-item">BRSV (Bovine Respiratory Syncytial Virus)</li>
+                                <li class="list-group-item">Clostridial diseases (Blackleg 7-way / 8-way)</li>
+                                <li class="list-group-item">Leptospirosis (5-way)</li>
+                                <li class="list-group-item">Brucellosis</li>
+                                <li class="list-group-item">Anthrax (where required)</li>
+                                <li class="list-group-item">Mastitis (J-5 E.coli etc.)</li>
+                                <li class="list-group-item">Calf Scours (Rota / Corona / E.coli)</li>
+                                <li class="list-group-item">Tetanus</li>
+                                <li class="list-group-item">Pinkeye (Moraxella)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5>Vaccination Records</h5>
+                            <button class="btn btn-farm btn-sm" data-bs-toggle="modal" data-bs-target="#vaccModal">Add Record</button>
+                        </div>
+                        <div class="card">
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th>Cow</th><th>Vaccine / Disease</th><th>Date</th><th>Next Due</th><th>Action</th></tr></thead>
+                                    <tbody id="vaccTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Branch Modal -->
+<div class="modal fade" id="branchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Add Branch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Branch Name</label><input type="text" id="branchName" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Location</label><input type="text" id="branchLoc" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Manager Name</label><input type="text" id="branchMgr" class="form-control"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-farm" onclick="saveBranch()">Save Branch</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cow Modal -->
+<div class="modal fade" id="cowModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Add / Edit Cow</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cowId">
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="form-label">Tag / ID</label><input type="text" id="cowTag" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Name</label><input type="text" id="cowName" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Breed</label>
+                        <select id="cowBreed" class="form-select">
+                            <option>Friesian</option><option>Ayrshire</option><option>Jersey</option>
+                            <option>Guernsey</option><option>Sahiwal</option><option>Crossbreed</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label">Age (years)</label><input type="number" step="0.1" id="cowAge" class="form-control"></div>
+                    <div class="col-md-3"><label class="form-label">Branch</label><select id="cowBranch" class="form-select"></select></div>
+                    <div class="col-md-3"><label class="form-label">AI Date (Artificial Insemination)</label><input type="date" id="cowAI" class="form-control"></div>
+                    <div class="col-md-3"><label class="form-label">Status</label>
+                        <select id="cowStatus" class="form-select">
+                            <option value="Healthy">Healthy</option>
+                            <option value="Sick">Sick</option>
+                        </select>
+                    </div>
+                    <div class="col-12"><label class="form-label">Doctor / Sickness Description (if sick)</label>
+                        <textarea id="cowSickNote" class="form-control" rows="3" placeholder="Describe symptoms, treatment given by doctor..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-farm" onclick="saveCow()">Save Cow</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feed Modal -->
+<div class="modal fade" id="feedModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Feed Stock</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Feed Type</label>
+                    <select id="feedType" class="form-select">
+                        <option>Dairy Meal</option><option>Maize Germ</option><option>Wheat Bran</option>
+                        <option>Napier Grass</option><option>Hay</option><option>Silage</option><option>Mineral Lick</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Quantity (kg)</label><input type="number" id="feedQty" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Daily Use (kg)</label><input type="number" id="feedDaily" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveFeed()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Milk Modal -->
+<div class="modal fade" id="milkModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Record Milk Production</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Cow</label><select id="milkCow" class="form-select"></select></div>
+                <div class="mb-3"><label class="form-label">Date</label><input type="date" id="milkDate" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Morning (Litres)</label><input type="number" step="0.1" id="milkMorning" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Evening (Litres)</label><input type="number" step="0.1" id="milkEvening" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveMilk()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Worker Modal -->
+<div class="modal fade" id="workerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Add Worker</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Full Name</label><input type="text" id="workerName" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Type</label>
+                    <select id="workerType" class="form-select">
+                        <option>Regular</option>
+                        <option>Irregular / Casual</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Role</label><input type="text" id="workerRole" class="form-control" placeholder="Milker, Cleaner, etc."></div>
+                <div class="mb-3"><label class="form-label">Branch</label><select id="workerBranch" class="form-select"></select></div>
+                <div class="mb-3"><label class="form-label">Phone</label><input type="text" id="workerPhone" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveWorker()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Manager Modal -->
+<div class="modal fade" id="managerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Add Manager</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Full Name</label><input type="text" id="mgrName" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Branch</label><select id="mgrBranch" class="form-select"></select></div>
+                <div class="mb-3"><label class="form-label">Phone</label><input type="text" id="mgrPhone" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Email</label><input type="email" id="mgrEmail" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveManager()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Modal -->
+<div class="modal fade" id="vehicleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Add Vehicle / Machine</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Name</label><input type="text" id="vehName" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Type</label>
+                    <select id="vehType" class="form-select">
+                        <option>Tractor</option><option>Pickup</option><option>Lorry</option>
+                        <option>Milking Machine</option><option>Generator</option><option>Water Pump</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Registration / Serial</label><input type="text" id="vehReg" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Status</label>
+                    <select id="vehStatus" class="form-select"><option>Working</option><option>Under Maintenance</option><option>Broken</option></select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveVehicle()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Fuel Modal -->
+<div class="modal fade" id="fuelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Record Fuel</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Vehicle / Machine</label><select id="fuelVeh" class="form-select"></select></div>
+                <div class="mb-3"><label class="form-label">Date</label><input type="date" id="fuelDate" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Litres</label><input type="number" step="0.1" id="fuelLitres" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Cost (KES)</label><input type="number" id="fuelCost" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Notes</label><input type="text" id="fuelNotes" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveFuel()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Electricity Modal -->
+<div class="modal fade" id="elecModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Electricity Reading</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Date</label><input type="date" id="elecDate" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Reading (kWh)</label><input type="number" id="elecReading" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Cost (KES)</label><input type="number" id="elecCost" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Notes</label><input type="text" id="elecNotes" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveElec()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Vaccination Modal -->
+<div class="modal fade" id="vaccModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Vaccination Record</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Cow</label><select id="vaccCow" class="form-select"></select></div>
+                <div class="mb-3"><label class="form-label">Vaccine / Disease</label>
+                    <select id="vaccDisease" class="form-select">
+                        <option>IBR</option><option>BVD</option><option>PI3</option><option>BRSV</option>
+                        <option>Clostridial (7/8-way)</option><option>Leptospirosis</option><option>Brucellosis</option>
+                        <option>Anthrax</option><option>Mastitis (J-5)</option><option>Calf Scours</option>
+                        <option>Tetanus</option><option>Pinkeye</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Date Given</label><input type="date" id="vaccDate" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Next Due Date</label><input type="date" id="vaccNext" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-farm" onclick="saveVacc()">Save</button></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ========== DATA STORAGE ==========
+const DB = {
+    branches: JSON.parse(localStorage.getItem('mw_branches') || '[]'),
+    cows: JSON.parse(localStorage.getItem('mw_cows') || '[]'),
+    feeds: JSON.parse(localStorage.getItem('mw_feeds') || '[]'),
+    milk: JSON.parse(localStorage.getItem('mw_milk') || '[]'),
+    workers: JSON.parse(localStorage.getItem('mw_workers') || '[]'),
+    managers: JSON.parse(localStorage.getItem('mw_managers') || '[]'),
+    vehicles: JSON.parse(localStorage.getItem('mw_vehicles') || '[]'),
+    fuel: JSON.parse(localStorage.getItem('mw_fuel') || '[]'),
+    electricity: JSON.parse(localStorage.getItem('mw_electricity') || '[]'),
+    vaccinations: JSON.parse(localStorage.getItem('mw_vacc') || '[]')
+};
+
+function saveDB() {
+    localStorage.setItem('mw_branches', JSON.stringify(DB.branches));
+    localStorage.setItem('mw_cows', JSON.stringify(DB.cows));
+    localStorage.setItem('mw_feeds', JSON.stringify(DB.feeds));
+    localStorage.setItem('mw_milk', JSON.stringify(DB.milk));
+    localStorage.setItem('mw_workers', JSON.stringify(DB.workers));
+    localStorage.setItem('mw_managers', JSON.stringify(DB.managers));
+    localStorage.setItem('mw_vehicles', JSON.stringify(DB.vehicles));
+    localStorage.setItem('mw_fuel', JSON.stringify(DB.fuel));
+    localStorage.setItem('mw_electricity', JSON.stringify(DB.electricity));
+    localStorage.setItem('mw_vacc', JSON.stringify(DB.vaccinations));
+    updateDashboard();
+    renderAll();
+}
+
+// ========== NAVIGATION ==========
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    event.target.closest('.nav-link').classList.add('active');
+    renderAll();
+}
+
+// ========== RENDER FUNCTIONS ==========
+function renderAll() {
+    renderBranches();
+    renderCows();
+    renderFeeds();
+    renderMilk();
+    renderWorkers();
+    renderManagers();
+    renderVehicles();
+    renderFuel();
+    renderElec();
+    renderVacc();
+    populateSelects();
+}
+
+function updateDashboard() {
+    document.getElementById('statCows').textContent = DB.cows.length;
+    document.getElementById('statBranches').textContent = DB.branches.length;
+    document.getElementById('statWorkers').textContent = DB.workers.length;
+
+    const today = new Date().toISOString().slice(0,10);
+    const todayMilk = DB.milk.filter(m => m.date === today).reduce((s,m) => s + (m.morning||0) + (m.evening||0), 0);
+    document.getElementById('statMilk').textContent = todayMilk.toFixed(1);
+
+    const sick = DB.cows.filter(c => c.status === 'Sick');
+    document.getElementById('sickAlert').innerHTML = sick.length 
+        ? sick.map(c => `<div>• ${c.tag} - ${c.name}: ${c.sickNote || 'No notes'}</div>`).join('')
+        : 'No sick cows currently.';
+
+    const low = DB.feeds.filter(f => f.qty < (f.daily * 7));
+    document.getElementById('feedAlert').innerHTML = low.length
+        ? low.map(f => `<div class="text-warning">• ${f.type}: only ${f.qty} kg left</div>`).join('')
+        : 'All good.';
+}
+
+function renderBranches() {
+    const tbody = document.getElementById('branchTable');
+    tbody.innerHTML = DB.branches.map((b,i) => {
+        const cowCount = DB.cows.filter(c => c.branch === b.name).length;
+        return `<tr>
+            <td>${b.name}</td><td>${b.location}</td><td>${cowCount}</td><td>${b.manager}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('branches',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5" class="text-center text-muted">No branches yet</td></tr>';
+}
+
+function renderCows() {
+    const tbody = document.getElementById('cowTable');
+    tbody.innerHTML = DB.cows.map((c,i) => `
+        <tr>
+            <td><strong>${c.tag}</strong></td>
+            <td>${c.name}</td>
+            <td>${c.breed}</td>
+            <td>${c.age}</td>
+            <td>${c.branch}</td>
+            <td>${c.aiDate || '-'}</td>
+            <td><span class="badge ${c.status==='Sick'?'badge-sick':'badge-healthy'}">${c.status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editCow(${i})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('cows',${i})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted">No cows registered</td></tr>';
+}
+
+function renderFeeds() {
+    const tbody = document.getElementById('feedTable');
+    let total = 0, daily = 0;
+    tbody.innerHTML = DB.feeds.map((f,i) => {
+        total += Number(f.qty);
+        daily += Number(f.daily);
+        return `<tr>
+            <td>${f.type}</td><td>${f.qty}</td><td>${f.daily}</td><td>${f.updated}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('feeds',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5" class="text-center text-muted">No feed records</td></tr>';
+    
+    document.getElementById('totalFeed').textContent = total.toFixed(0);
+    document.getElementById('dailyFeed').textContent = daily.toFixed(0);
+    document.getElementById('daysLeft').textContent = daily > 0 ? Math.floor(total / daily) : '∞';
+}
+
+function renderMilk() {
+    document.getElementById('milkTable').innerHTML = DB.milk.map((m,i) => {
+        const cow = DB.cows.find(c => c.tag === m.cowTag);
+        const total = (Number(m.morning)||0) + (Number(m.evening)||0);
+        return `<tr>
+            <td>${m.date}</td><td>${cow ? cow.name + ' ('+m.cowTag+')' : m.cowTag}</td>
+            <td>${m.morning}</td><td>${m.evening}</td><td><strong>${total.toFixed(1)}</strong></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('milk',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="6" class="text-center text-muted">No milk records</td></tr>';
+}
+
+function renderWorkers() {
+    document.getElementById('workerTable').innerHTML = DB.workers.map((w,i) => `
+        <tr>
+            <td>${w.name}</td>
+            <td><span class="badge ${w.type==='Regular'?'bg-success':'bg-warning text-dark'}">${w.type}</span></td>
+            <td>${w.role}</td><td>${w.branch}</td><td>${w.phone}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('workers',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">No workers</td></tr>';
+}
+
+function renderManagers() {
+    document.getElementById('managerTable').innerHTML = DB.managers.map((m,i) => `
+        <tr>
+            <td>${m.name}</td><td>${m.branch}</td><td>${m.phone}</td><td>${m.email}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('managers',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">No managers</td></tr>';
+}
+
+function renderVehicles() {
+    document.getElementById('vehicleTable').innerHTML = DB.vehicles.map((v,i) => `
+        <tr>
+            <td>${v.name}</td><td>${v.type}</td><td>${v.reg}</td>
+            <td><span class="badge ${v.status==='Working'?'bg-success':v.status==='Broken'?'bg-danger':'bg-warning text-dark'}">${v.status}</span></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('vehicles',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">No vehicles/machines</td></tr>';
+}
+
+function renderFuel() {
+    document.getElementById('fuelTable').innerHTML = DB.fuel.map((f,i) => `
+        <tr>
+            <td>${f.date}</td><td>${f.vehicle}</td><td>${f.litres}</td><td>${f.cost}</td><td>${f.notes||'-'}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('fuel',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">No fuel records</td></tr>';
+}
+
+function renderElec() {
+    document.getElementById('elecTable').innerHTML = DB.electricity.map((e,i) => `
+        <tr>
+            <td>${e.date}</td><td>${e.reading}</td><td>${e.cost}</td><td>${e.notes||'-'}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('electricity',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">No electricity records</td></tr>';
+}
+
+function renderVacc() {
+    document.getElementById('vaccTable').innerHTML = DB.vaccinations.map((v,i) => {
+        const cow = DB.cows.find(c => c.tag === v.cowTag);
+        return `<tr>
+            <td>${cow ? cow.name : v.cowTag}</td><td>${v.disease}</td><td>${v.date}</td><td>${v.next||'-'}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteItem('vaccinations',${i})"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5" class="text-center text-muted">No vaccination records</td></tr>';
+}
+
+function populateSelects() {
+    const branchOpts = DB.branches.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+    document.querySelectorAll('#cowBranch, #workerBranch, #mgrBranch').forEach(s => {
+        if(s) s.innerHTML = '<option value="">Select Branch</option>' + branchOpts;
+    });
+
+    const cowOpts = DB.cows.map(c => `<option value="${c.tag}">${c.tag} - ${c.name}</option>`).join('');
+    document.querySelectorAll('#milkCow, #vaccCow').forEach(s => {
+        if(s) s.innerHTML = '<option value="">Select Cow</option>' + cowOpts;
+    });
+
+    const vehOpts = DB.vehicles.map(v => `<option value="${v.name}">${v.name} (${v.type})</option>`).join('');
+    const fuelVeh = document.getElementById('fuelVeh');
+    if(fuelVeh) fuelVeh.innerHTML = '<option value="">Select</option>' + vehOpts;
+}
+
+// ========== SAVE FUNCTIONS ==========
+function saveBranch() {
+    const name = document.getElementById('branchName').value.trim();
+    if(!name) return alert('Enter branch name');
+    DB.branches.push({
+        name,
+        location: document.getElementById('branchLoc').value,
+        manager: document.getElementById('branchMgr').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
+    document.getElementById('branchName').value = '';
+}
+
+function saveCow() {
+    const tag = document.getElementById('cowTag').value.trim();
+    if(!tag) return alert('Enter Tag/ID');
+    const id = document.getElementById('cowId').value;
+    const data = {
+        tag,
+        name: document.getElementById('cowName').value,
+        breed: document.getElementById('cowBreed').value,
+        age: document.getElementById('cowAge').value,
+        branch: document.getElementById('cowBranch').value,
+        aiDate: document.getElementById('cowAI').value,
+        status: document.getElementById('cowStatus').value,
+        sickNote: document.getElementById('cowSickNote').value
+    };
+    if(id !== '') {
+        DB.cows[id] = data;
+    } else {
+        DB.cows.push(data);
+    }
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('cowModal')).hide();
+    // clear form
+    document.getElementById('cowId').value = '';
+    document.getElementById('cowTag').value = '';
+    document.getElementById('cowName').value = '';
+    document.getElementById('cowSickNote').value = '';
+}
+
+function editCow(i) {
+    const c = DB.cows[i];
+    document.getElementById('cowId').value = i;
+    document.getElementById('cowTag').value = c.tag;
+    document.getElementById('cowName').value = c.name;
+    document.getElementById('cowBreed').value = c.breed;
+    document.getElementById('cowAge').value = c.age;
+    document.getElementById('cowBranch').value = c.branch;
+    document.getElementById('cowAI').value = c.aiDate || '';
+    document.getElementById('cowStatus').value = c.status;
+    document.getElementById('cowSickNote').value = c.sickNote || '';
+    new bootstrap.Modal(document.getElementById('cowModal')).show();
+}
+
+function saveFeed() {
+    const type = document.getElementById('feedType').value;
+    const qty = document.getElementById('feedQty').value;
+    const daily = document.getElementById('feedDaily').value;
+    if(!qty) return alert('Enter quantity');
+    const existing = DB.feeds.findIndex(f => f.type === type);
+    const data = { type, qty: Number(qty), daily: Number(daily||0), updated: new Date().toLocaleDateString() };
+    if(existing > -1) DB.feeds[existing] = data;
+    else DB.feeds.push(data);
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('feedModal')).hide();
+}
+
+function saveMilk() {
+    const cowTag = document.getElementById('milkCow').value;
+    if(!cowTag) return alert('Select a cow');
+    DB.milk.push({
+        cowTag,
+        date: document.getElementById('milkDate').value || new Date().toISOString().slice(0,10),
+        morning: Number(document.getElementById('milkMorning').value)||0,
+        evening: Number(document.getElementById('milkEvening').value)||0
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('milkModal')).hide();
+}
+
+function saveWorker() {
+    const name = document.getElementById('workerName').value.trim();
+    if(!name) return alert('Enter name');
+    DB.workers.push({
+        name,
+        type: document.getElementById('workerType').value,
+        role: document.getElementById('workerRole').value,
+        branch: document.getElementById('workerBranch').value,
+        phone: document.getElementById('workerPhone').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('workerModal')).hide();
+}
+
+function saveManager() {
+    const name = document.getElementById('mgrName').value.trim();
+    if(!name) return alert('Enter name');
+    DB.managers.push({
+        name,
+        branch: document.getElementById('mgrBranch').value,
+        phone: document.getElementById('mgrPhone').value,
+        email: document.getElementById('mgrEmail').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
+}
+
+function saveVehicle() {
+    const name = document.getElementById('vehName').value.trim();
+    if(!name) return alert('Enter name');
+    DB.vehicles.push({
+        name,
+        type: document.getElementById('vehType').value,
+        reg: document.getElementById('vehReg').value,
+        status: document.getElementById('vehStatus').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('vehicleModal')).hide();
+}
+
+function saveFuel() {
+    const vehicle = document.getElementById('fuelVeh').value;
+    if(!vehicle) return alert('Select vehicle');
+    DB.fuel.push({
+        vehicle,
+        date: document.getElementById('fuelDate').value || new Date().toISOString().slice(0,10),
+        litres: document.getElementById('fuelLitres').value,
+        cost: document.getElementById('fuelCost').value,
+        notes: document.getElementById('fuelNotes').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('fuelModal')).hide();
+}
+
+function saveElec() {
+    DB.electricity.push({
+        date: document.getElementById('elecDate').value || new Date().toISOString().slice(0,10),
+        reading: document.getElementById('elecReading').value,
+        cost: document.getElementById('elecCost').value,
+        notes: document.getElementById('elecNotes').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('elecModal')).hide();
+}
+
+function saveVacc() {
+    const cowTag = document.getElementById('vaccCow').value;
+    if(!cowTag) return alert('Select cow');
+    DB.vaccinations.push({
+        cowTag,
+        disease: document.getElementById('vaccDisease').value,
+        date: document.getElementById('vaccDate').value,
+        next: document.getElementById('vaccNext').value
+    });
+    saveDB();
+    bootstrap.Modal.getInstance(document.getElementById('vaccModal')).hide();
+}
+
+function deleteItem(key, index) {
+    if(confirm('Delete this record?')) {
+        DB[key].splice(index, 1);
+        saveDB();
+    }
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+    // Set today's date on date inputs
+    const today = new Date().toISOString().slice(0,10);
+    document.querySelectorAll('input[type="date"]').forEach(i => { if(!i.value) i.value = today; });
+    updateDashboard();
+    renderAll();
+});
+</script>
+</body>
+</html>
